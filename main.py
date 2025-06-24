@@ -11,4 +11,4 @@ def main():
     ui = AttendanceUI()
 
 if __name__ == "__main__":
-    main()
+    main() 
