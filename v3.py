@@ -353,7 +353,7 @@ class AttendanceUI:
     def kill_feather_icon(self):
         try:
             ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("KFCS.Attendance.Pro")  # Unique ID
-            self.root.iconbitmap(default="company_logo\steve_jobs_avatar_icon_263195.png")  # 1x1 transparent .ico file
+            self.root.iconbitmap(default="assets\steve_jobs_avatar_icon_263195.png")  # 1x1 transparent .ico file
         except Exception as e:
             print("Icon override failed (non-Windows?):", e)
     
