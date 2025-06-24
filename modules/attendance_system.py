@@ -5,6 +5,7 @@ import numpy as np
 import concurrent.futures
 import hashlib 
 from datetime import datetime
+import csv 
 
 import pickle 
 
@@ -42,23 +43,23 @@ class AttendanceSystem:
         """Load all required data files"""
         try:
             # Load face encodings
-            if os.path.exists("facial_recognition.dat"):
-                with open("facial_recognition.dat", "rb") as f:
+            if os.path.exists("data/facial_recognition.dat"):
+                with open("data/facial_recognition.dat", "rb") as f:
                     data = pickle.load(f)
                     self.known_face_encodings = data["encodings"]
                     self.known_face_names = data["names"]
             
             # Load attendance records
-            if os.path.exists("attendance.csv"):
-                with open("attendance.csv", "r") as f:
+            if os.path.exists("data/attendance.csv"):
+                with open("data/attendance.csv", "r") as f:
                     reader = csv.DictReader(f)
                     self.attendance_log = list(reader)
                     
             # Create files if they don't exist
             if not os.path.exists("facial_recognition.dat"):
                 self.save_known_faces()
-            if not os.path.exists("attendance.csv"):
-                with open("attendance.csv", "w") as f:
+            if not os.path.exists("data/attendance.csv"):
+                with open("data/attendance.csv", "w") as f:
                     f.write("Name,Date,Check-in,Check-out\n")
                     
         except Exception as e:
@@ -84,7 +85,7 @@ class AttendanceSystem:
                 "encodings": self.known_face_encodings,
                 "names": self.known_face_names
             }
-            with open("facial_recognition.dat", "wb") as f:
+            with open("data/facial_recognition.dat", "wb") as f:
                 pickle.dump(data, f)
         except Exception as e:
             print(f"Error saving face data: {e}")
@@ -94,7 +95,7 @@ class AttendanceSystem:
         try:
             if self.attendance_log:
                 keys = self.attendance_log[0].keys()
-                with open("attendance.csv", "w", newline='') as f:
+                with open("data/attendance.csv", "w", newline='') as f:
                     writer = csv.DictWriter(f, fieldnames=keys)
                     writer.writeheader()
                     writer.writerows(self.attendance_log)
