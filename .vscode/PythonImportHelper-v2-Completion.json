@@ -277,7 +277,7 @@
         "kind": 2,
         "importPath": "main",
         "description": "main",
-        "peekOfCode": "def main():\n    # Initialize the core logic class\n    attendance_system = AttendanceSystem()\n    # Pass attendance system to face processor\n    processor = FaceProcessor(attendance_system)\n    # Pass  to UI\n    #And hopefully run. \n    ui = AttendanceUI()\nif __name__ == \"__main__\":\n    main()",
+        "peekOfCode": "def main():\n    # Initialize the core logic class\n    attendance_system = AttendanceSystem()\n    # Pass attendance system to face processor\n    processor = FaceProcessor(attendance_system)\n    #And run. \n    ui = AttendanceUI()\nif __name__ == \"__main__\":\n    main()",
         "detail": "main",
         "documentation": {}
     }
