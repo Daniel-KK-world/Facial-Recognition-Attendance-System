@@ -7,7 +7,7 @@ def main():
     # Pass attendance system to face processor
     processor = FaceProcessor(attendance_system)
     
-    # Pass both to UI
+    # Pass  to UI
     #And hopefully run. 
     ui = AttendanceUI()
 

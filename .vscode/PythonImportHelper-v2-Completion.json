@@ -70,22 +70,6 @@
         "documentation": {}
     },
     {
-        "label": "datetime",
-        "importPath": "datetime",
-        "description": "datetime",
-        "isExtraImport": true,
-        "detail": "datetime",
-        "documentation": {}
-    },
-    {
-        "label": "timedelta",
-        "importPath": "datetime",
-        "description": "datetime",
-        "isExtraImport": true,
-        "detail": "datetime",
-        "documentation": {}
-    },
-    {
         "label": "csv",
         "kind": 6,
         "isExtraImport": true,
@@ -195,60 +179,12 @@
         "documentation": {}
     },
     {
-        "label": "ttk",
-        "importPath": "tkinter",
-        "description": "tkinter",
-        "isExtraImport": true,
-        "detail": "tkinter",
-        "documentation": {}
-    },
-    {
-        "label": "simpledialog",
-        "importPath": "tkinter",
-        "description": "tkinter",
-        "isExtraImport": true,
-        "detail": "tkinter",
-        "documentation": {}
-    },
-    {
-        "label": "messagebox",
-        "importPath": "tkinter",
-        "description": "tkinter",
-        "isExtraImport": true,
-        "detail": "tkinter",
-        "documentation": {}
-    },
-    {
         "label": "tkinter.font",
         "kind": 6,
         "isExtraImport": true,
         "importPath": "tkinter.font",
         "description": "tkinter.font",
         "detail": "tkinter.font",
-        "documentation": {}
-    },
-    {
-        "label": "Image",
-        "importPath": "PIL",
-        "description": "PIL",
-        "isExtraImport": true,
-        "detail": "PIL",
-        "documentation": {}
-    },
-    {
-        "label": "ImageTk",
-        "importPath": "PIL",
-        "description": "PIL",
-        "isExtraImport": true,
-        "detail": "PIL",
-        "documentation": {}
-    },
-    {
-        "label": "ImageDraw",
-        "importPath": "PIL",
-        "description": "PIL",
-        "isExtraImport": true,
-        "detail": "PIL",
         "documentation": {}
     },
     {
@@ -293,14 +229,6 @@
         "documentation": {}
     },
     {
-        "label": "deque",
-        "importPath": "collections",
-        "description": "collections",
-        "isExtraImport": true,
-        "detail": "collections",
-        "documentation": {}
-    },
-    {
         "label": "ctypes",
         "kind": 6,
         "isExtraImport": true,
@@ -315,24 +243,6 @@
         "description": "modules.face_processor",
         "isExtraImport": true,
         "detail": "modules.face_processor",
-        "documentation": {}
-    },
-    {
-        "label": "random",
-        "kind": 6,
-        "isExtraImport": true,
-        "importPath": "random",
-        "description": "random",
-        "detail": "random",
-        "documentation": {}
-    },
-    {
-        "label": "time",
-        "kind": 6,
-        "isExtraImport": true,
-        "importPath": "time",
-        "description": "time",
-        "detail": "time",
         "documentation": {}
     },
     {
@@ -367,35 +277,8 @@
         "kind": 2,
         "importPath": "main",
         "description": "main",
-        "peekOfCode": "def main():\n    # Initialize the core logic class\n    attendance_system = AttendanceSystem()\n    # Pass attendance system to face processor\n    processor = FaceProcessor(attendance_system)\n    # Pass both to UI\n    #And hopefully run. \n    ui = AttendanceUI()\nif __name__ == \"__main__\":\n    main()",
+        "peekOfCode": "def main():\n    # Initialize the core logic class\n    attendance_system = AttendanceSystem()\n    # Pass attendance system to face processor\n    processor = FaceProcessor(attendance_system)\n    # Pass  to UI\n    #And hopefully run. \n    ui = AttendanceUI()\nif __name__ == \"__main__\":\n    main()",
         "detail": "main",
-        "documentation": {}
-    },
-    {
-        "label": "AttendanceSystem",
-        "kind": 6,
-        "importPath": "v3",
-        "description": "v3",
-        "peekOfCode": "class AttendanceSystem:\n    def __init__(self):\n        self.known_face_encodings = []\n        self.known_face_names = []\n        self.attendance_log = []\n        self.anti_spoofing_threshold = 0.3  # Threshold to indicate that a user is real. \n        self.min_confidence = 0.6  # Minimum confidence for recognition\n        self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=2)\n        self.liveness_cache = {}  # {name: timestamp}\n        self.liveness_timeout = 10000  # seconds between liveness checks per person",
-        "detail": "v3",
-        "documentation": {}
-    },
-    {
-        "label": "FaceProcessor",
-        "kind": 6,
-        "importPath": "v3",
-        "description": "v3",
-        "peekOfCode": "class FaceProcessor:\n    \"\"\"Optimized but reliable face processing\"\"\"\n    def __init__(self, attendance_system):\n        self.attendance_system = attendance_system\n        self.frame_queue = queue.Queue(maxsize=1)\n        self.result_queue = queue.Queue(maxsize=1)\n        self.running = False\n        self.process_thread = None\n        self.last_locations = []\n        self.last_encodings = []",
-        "detail": "v3",
-        "documentation": {}
-    },
-    {
-        "label": "AttendanceUI",
-        "kind": 6,
-        "importPath": "v3",
-        "description": "v3",
-        "peekOfCode": "class AttendanceUI:\n    def __init__(self):\n        self.root = tk.Tk()\n        self.root.geometry(\"1280x720+100+50\")\n        self.root.title(\"KFCS Attendance Pro\")\n        self.root.configure(bg='white')\n        self.root.tk.call('wm', 'iconphoto', self.root._w, tk.PhotoImage(width=1, height=1))\n        self.root.protocol(\"WM_DELETE_WINDOW\", self.on_close)\n        # Initialize systems\n        self.attendance_system = AttendanceSystem()",
-        "detail": "v3",
         "documentation": {}
     }
 ]
