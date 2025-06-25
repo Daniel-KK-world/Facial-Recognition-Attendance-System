@@ -47,13 +47,13 @@ Engage with stakeholders and gather both functional and non-functional system ne
 
 ### System Analysis & Design
 
-### Design a modular client-server architecture
+Design a modular client-server architecture
 
-### Implement secure database schema
+Implement secure database schema
 
-### Create intuitive UI for both staff and admin users
+Create intuitive UI for both staff and admin users
 
-### Select and configure optimal libraries for real-time processing
+Select and configure optimal libraries for real-time processing
 
 ## Prototype Development
 Build an MVP for early feedback and refinement.
