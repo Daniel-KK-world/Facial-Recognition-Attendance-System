@@ -39,15 +39,15 @@ Dependencies	Visual Studio C++ (for Dlib & CMake)
 ## 🧠 Methodology
 This system follows an iterative development model with the following steps:
 
-Problem Crystallization
+## Problem Crystallization
 Identify inefficiencies in the existing attendance process (manual logging, delays, and human error).
 
-Requirements Gathering
+## Requirements Gathering
 Engage with stakeholders and gather both functional and non-functional system needs.
 
-System Analysis & Design
+## System Analysis & Design
 
-Design a modular client-server architecture
+### Design a modular client-server architecture
 
 Implement secure database schema
 
@@ -55,10 +55,10 @@ Create intuitive UI for both staff and admin users
 
 Select and configure optimal libraries for real-time processing
 
-Prototype Development
+## Prototype Development
 Build an MVP for early feedback and refinement.
 
-Implementation & Testing
+## Implementation & Testing
 Incorporate unit testing, user testing, and performance validation.
 
 ## 🧪 System Requirements
