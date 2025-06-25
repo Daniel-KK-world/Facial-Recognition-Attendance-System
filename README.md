@@ -1,13 +1,21 @@
 # 📸 Real-Time Facial Recognition Attendance System
+![image](https://github.com/user-attachments/assets/1b688437-ee45-4dd0-bc9e-ab75bb567e4b)
+
 
 ## Developed for Kantanka Financial Co-operative Society
+![image](https://github.com/user-attachments/assets/5cc33518-b3cf-4b50-9525-794802cb1611)
+
 
 A deep learning-powered attendance management solution leveraging computer vision and biometric authentication.
 
 ## 🔍 Overview
 Manual attendance systems are inefficient, error-prone, and vulnerable to manipulation. This project aims to solve those challenges by developing a real-time Facial Recognition Attendance System using Deep Learning, OpenCV, and the Face Recognition API.
+![image](https://github.com/user-attachments/assets/976499f0-8e0f-477d-b1d3-546b1c749b6f)
+
 
 ## Built as a standalone desktop application, this system enables accurate, secure, and user-friendly attendance logging, tailored specifically for the operational context of Kantanka Financial Co-operative Society.
+![image](https://github.com/user-attachments/assets/5e99054b-3e62-492d-9091-71514a094f47)
+
 
 ## 🎯 Key Features
 ✅ Real-time facial detection & recognition
@@ -80,7 +88,7 @@ PyInstaller (for .exe conversion)
 
 
 
-📊 Future Improvements
+## 📊 Future Improvements
 Add support for multiple camera inputs
 
 Integrate web-based admin dashboard
