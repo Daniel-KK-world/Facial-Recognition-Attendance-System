@@ -39,21 +39,21 @@ Dependencies	Visual Studio C++ (for Dlib & CMake)
 ## 🧠 Methodology
 This system follows an iterative development model with the following steps:
 
-## Problem Crystallization
+### Problem Crystallization
 Identify inefficiencies in the existing attendance process (manual logging, delays, and human error).
 
-## Requirements Gathering
+### Requirements Gathering
 Engage with stakeholders and gather both functional and non-functional system needs.
 
-## System Analysis & Design
+### System Analysis & Design
 
 ### Design a modular client-server architecture
 
-Implement secure database schema
+### Implement secure database schema
 
-Create intuitive UI for both staff and admin users
+### Create intuitive UI for both staff and admin users
 
-Select and configure optimal libraries for real-time processing
+### Select and configure optimal libraries for real-time processing
 
 ## Prototype Development
 Build an MVP for early feedback and refinement.
@@ -89,15 +89,15 @@ PyInstaller (for .exe conversion)
 
 
 ## 📊 Future Improvements
-Add support for multiple camera inputs
+### Add support for multiple camera inputs
 
-Integrate web-based admin dashboard
+### Integrate web-based admin dashboard
 
-Real-time cloud synchronization
+### Real-time cloud synchronization
 
-Add email alerts or SMS notifications
+### Add email alerts or SMS notifications
 
-Deploy as a microservice for broader use
+### Deploy as a microservice for broader use
 
 👨🏽‍💻 Author
 Daniel Kwabi
