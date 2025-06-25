@@ -280,5 +280,41 @@
         "peekOfCode": "def main():\n    # Initialize the core logic class\n    attendance_system = AttendanceSystem()\n    # Pass attendance system to face processor\n    processor = FaceProcessor(attendance_system)\n    #And run. \n    ui = AttendanceUI()\nif __name__ == \"__main__\":\n    main()",
         "detail": "main",
         "documentation": {}
+    },
+    {
+        "label": "hash_password",
+        "kind": 2,
+        "importPath": "utils",
+        "description": "utils",
+        "peekOfCode": "def hash_password(password):\n    return hashlib.sha256(password.encode().hexidigest)\ndef verify_admin_password(password):\n    return hash_password(password) == admin_password\ndef change_admin_password(old_password, new_password):\n    if verify_admin_password(old_password)",
+        "detail": "utils",
+        "documentation": {}
+    },
+    {
+        "label": "verify_admin_password",
+        "kind": 2,
+        "importPath": "utils",
+        "description": "utils",
+        "peekOfCode": "def verify_admin_password(password):\n    return hash_password(password) == admin_password\ndef change_admin_password(old_password, new_password):\n    if verify_admin_password(old_password)",
+        "detail": "utils",
+        "documentation": {}
+    },
+    {
+        "label": "change_admin_password",
+        "kind": 2,
+        "importPath": "utils",
+        "description": "utils",
+        "peekOfCode": "def change_admin_password(old_password, new_password):\n    if verify_admin_password(old_password)",
+        "detail": "utils",
+        "documentation": {}
+    },
+    {
+        "label": "admin_password",
+        "kind": 5,
+        "importPath": "utils",
+        "description": "utils",
+        "peekOfCode": "admin_password = hash_password(\"admin123\")\ndef hash_password(password):\n    return hashlib.sha256(password.encode().hexidigest)\ndef verify_admin_password(password):\n    return hash_password(password) == admin_password\ndef change_admin_password(old_password, new_password):\n    if verify_admin_password(old_password)",
+        "detail": "utils",
+        "documentation": {}
     }
 ]
