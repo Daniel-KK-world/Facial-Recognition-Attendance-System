@@ -4,4 +4,23 @@ opencv-python==4.6.0.66
 Pillow==9.2.0
 face_recognition==1.3.0
 
+Features to add or even remove... 
+(User Stories)
+
+1.No check in or check out or register new user 
+2.Just camera 
+3.Setting for admin only 
+4.Register users not for admin 
+5.Ask for authentication for all new users 
+6.Singing in should be automatic so should signing out
+7.Register new user should be in its own pop up page
+
+
+My improvements 
+1.Payroll system
+2.Working hours chart 
+3.Leave management system. 
+4.Filter records (weekly and monthly reports) 
+
+
 
