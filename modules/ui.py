@@ -7,24 +7,28 @@ import cv2
 import os
 import pandas as pd
 from datetime import datetime
-
 import face_recognition
-
 import queue
 from collections import deque
-
 import ctypes
 from modules.face_processor import FaceProcessor
-
 
 class AttendanceUI:
     def __init__(self):
         self.root = tk.Tk()
-        self.root.geometry("1280x720+100+50")
+        self.root.geometry("1280x800+100+50")
         self.root.title("KFCS Attendance Pro")
-        self.root.configure(bg='white')
+        self.root.configure(bg='#f5f7fa')
         self.root.tk.call('wm', 'iconphoto', self.root._w, tk.PhotoImage(width=1, height=1))
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
+        
+        # Custom color scheme
+        self.primary_color = "#4e73df"
+        self.secondary_color = "#1cc88a"
+        self.danger_color = "#e74a3b"
+        self.warning_color = "#f6c23e"
+        self.dark_color = "#5a5c69"
+        self.light_color = "#f8f9fc"
         
         # Initialize systems
         self.attendance_system = AttendanceSystem()
@@ -37,18 +41,18 @@ class AttendanceUI:
         
         # Custom fonts
         self.title_font = tkFont.Font(family="Segoe UI", size=24, weight="bold")
-        self.button_font = tkFont.Font(family="Segoe UI", size=12)
+        self.subtitle_font = tkFont.Font(family="Segoe UI", size=14)
+        self.button_font = tkFont.Font(family="Segoe UI", size=12, weight="bold")
         self.small_font = tkFont.Font(family="Segoe UI", size=10)
         
         # Create UI components
+        self.create_header()
         self.create_main_container()
-        self.kill_feather_icon()
         self.create_webcam_section()
         self.create_control_panel()
         self.create_status_bar()
         self.create_admin_button()
         self.create_user_button()
-        self.create_logo()
         
         # Webcam init
         self.cap = cv2.VideoCapture(0)
@@ -62,12 +66,38 @@ class AttendanceUI:
         
         self.root.mainloop()
     
-    def kill_feather_icon(self):
-        try:
-            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("KFCS.Attendance.Pro")  # Unique ID
-            self.root.iconbitmap(default="assets\steve_jobs_avatar_icon_263195.png")  # 1x1 transparent .ico file
-        except Exception as e:
-            print("Icon override failed (non-Windows?):", e)
+    def create_header(self):
+        """Create the top header bar"""
+        self.header = tk.Frame(self.root, bg=self.primary_color, height=60)
+        self.header.pack(fill='x', padx=0, pady=0)
+        
+        # Logo and title
+        self.logo_label = tk.Label(
+            self.header, 
+            text="KFCS Attendance Pro", 
+            font=self.title_font,
+            bg=self.primary_color,
+            fg='white',
+            padx=20
+        )
+        self.logo_label.pack(side='left')
+        
+        # Current time display
+        self.time_label = tk.Label(
+            self.header,
+            font=self.subtitle_font,
+            bg=self.primary_color,
+            fg='white',
+            padx=20
+        )
+        self.time_label.pack(side='right')
+        self.update_time()
+    
+    def update_time(self):
+        """Update the current time display"""
+        current_time = datetime.now().strftime("%A, %B %d %Y | %I:%M:%S %p")
+        self.time_label.config(text=current_time)
+        self.root.after(1000, self.update_time)
     
     def on_close(self):
         """Cleanup on window close"""
@@ -77,48 +107,86 @@ class AttendanceUI:
         self.root.destroy()
     
     def create_main_container(self):
-        """Create the main white container with shadow"""
-        # Shadow effect
-        self.shadow = tk.Frame(self.root, bg='#e0e0e0')
-        self.shadow.place(x=52, y=52, width=1180, height=620)
-        
-        # Main white container
+        """Create the main container with shadow"""
         self.main_frame = tk.Frame(
             self.root, 
-            bg='white',
+            bg=self.light_color,
             bd=0,
             highlightthickness=0,
             relief='ridge'
         )
         self.main_frame.pack(
-            side='left',
             fill='both',
             expand=True,
-            padx=50,  # Same as control panel for balance
+            padx=20,
             pady=20
         )
     
     def create_webcam_section(self):
         """Create the webcam display area"""
-        # Container for webcam with dark border
-        self.webcam_container = tk.Frame(self.main_frame, bg='#333', bd=0)
-        self.webcam_container.place(x=30, y=30, width=640, height=480)
+        # Container for webcam with card styling
+        self.webcam_card = tk.Frame(
+            self.main_frame, 
+            bg='white',
+            bd=0,
+            highlightthickness=0,
+            relief='groove'
+        )
+        self.webcam_card.pack(
+            side='left',
+            fill='both',
+            expand=True,
+            padx=10,
+            pady=10
+        )
+        
+        # Title for webcam section
+        tk.Label(
+            self.webcam_card,
+            text="Face Recognition",
+            font=self.subtitle_font,
+            bg='white',
+            fg=self.dark_color
+        ).pack(pady=(10, 5))
+        
+        # Webcam feed container
+        self.webcam_container = tk.Frame(self.webcam_card, bg='#333', bd=0)
+        self.webcam_container.pack(pady=10, padx=10, fill='both', expand=True)
         
         # Placeholder for webcam feed
         self.webcam_label = tk.Label(self.webcam_container, bg='#333')
-        self.webcam_label.place(x=2, y=2, width=636, height=476)
+        self.webcam_label.pack(fill='both', expand=True, padx=2, pady=2)
         
         # Current user display
-        self.current_user_label = tk.Label(self.webcam_container, 
-                                         bg='#333', fg='white',
-                                         font=self.button_font)
-        self.current_user_label.place(x=10, y=10)
+        self.current_user_frame = tk.Frame(self.webcam_card, bg='white')
+        self.current_user_frame.pack(fill='x', pady=(0, 10))
+        
+        tk.Label(
+            self.current_user_frame,
+            text="Current User:",
+            font=self.small_font,
+            bg='white',
+            fg=self.dark_color
+        ).pack(side='left', padx=10)
+        
+        self.current_user_label = tk.Label(
+            self.current_user_frame,
+            text="Not detected",
+            font=self.small_font,
+            bg='white',
+            fg=self.primary_color
+        )
+        self.current_user_label.pack(side='left')
         
         # FPS display
-        self.fps_label = tk.Label(self.webcam_container, 
-                                 bg='#333', fg='white',
-                                 font=self.small_font)
-        self.fps_label.place(x=10, y=450)
+        self.fps_label = tk.Label(
+            self.current_user_frame,
+            text="FPS: 0.0",
+            font=self.small_font,
+            bg='white',
+            fg=self.dark_color
+        )
+        self.fps_label.pack(side='right', padx=10)
     
     def process_webcam(self):
         """Process webcam frames with performance optimizations"""
@@ -168,17 +236,17 @@ class AttendanceUI:
             cv2.rectangle(frame, (left, bottom - 35), (right, bottom), color, cv2.FILLED)
             
             # Draw name and confidence
-            label = f"{name}"
+            label = f"{name} ({confidence:.2f})"
             cv2.putText(frame, label, (left + 6, bottom - 6), 
                        cv2.FONT_HERSHEY_DUPLEX, 0.8, (255, 255, 255), 1)
         
         # Update current user display
         if current_user:
             self.current_user = current_user
-            self.current_user_label.config(text=f"User: {current_user}")
+            self.current_user_label.config(text=current_user, fg=self.secondary_color)
         else:
             self.current_user = None
-            self.current_user_label.config(text="No recognized user")
+            self.current_user_label.config(text="Not detected", fg=self.dark_color)
         
         # Convert to PhotoImage
         img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -196,56 +264,95 @@ class AttendanceUI:
         self.fps_label.config(text=f"FPS: {avg_fps:.1f}")
         
         # Repeat every 40ms (25 FPS target)
-        self.webcam_label.after(100, self.process_webcam)
+        self.webcam_label.after(40, self.process_webcam)
     
     def create_control_panel(self):
         """Create the right-side control panel"""
-        self.control_panel = tk.Frame(self.main_frame, bg='white', bd=0)
+        self.control_panel = tk.Frame(
+            self.main_frame, 
+            bg='white',
+            bd=0,
+            highlightthickness=0,
+            relief='groove'
+        )
         self.control_panel.pack(
             side='right',
             fill='y',
-            padx=(20, 0),  # Only right padding
+            padx=10,
             pady=10,
-          
+            ipadx=10
         )
         
-        # Welcome message
-        tk.Label(self.control_panel, text="KFCS Attendance Pro", 
-                font=self.title_font, bg='white', fg='#333').pack(pady=10)
+        # Title for control panel
+        tk.Label(
+            self.control_panel,
+            text="Attendance Controls",
+            font=self.subtitle_font,
+            bg='white',
+            fg=self.dark_color
+        ).pack(pady=(10, 20))
         
         # Modern buttons
+        button_frame = tk.Frame(self.control_panel, bg='white')
+        button_frame.pack(fill='x', pady=10)
+        
         self.login_btn = self.create_modern_button(
-            self.control_panel, "CHECK IN", "#4CAF50", self.check_in)
-        self.login_btn.pack(pady=15, ipady=10)
+            button_frame, "CHECK IN", self.secondary_color, self.check_in)
+        self.login_btn.pack(fill='x', pady=5, ipady=8)
         
         self.logout_btn = self.create_modern_button(
-            self.control_panel, "CHECK OUT", "#F44336", self.check_out)
-        self.logout_btn.pack(pady=15, ipady=10)
+            button_frame, "CHECK OUT", self.danger_color, self.check_out)
+        self.logout_btn.pack(fill='x', pady=5, ipady=8)
         
         self.register_btn = self.create_modern_button(
-            self.control_panel, "REGISTER NEW USER", "#2196F3", self.register_user)
-        self.register_btn.pack(pady=15, ipady=10)
-        
-        # Separator
-        ttk.Separator(self.control_panel, orient='horizontal').pack(fill='x', pady=20)
+            button_frame, "REGISTER NEW USER", self.primary_color, self.register_user)
+        self.register_btn.pack(fill='x', pady=5, ipady=8)
         
         # Stats frame
-        self.stats_frame = tk.Frame(self.control_panel, bg='white')
-        self.stats_frame.pack()
+        stats_frame = tk.Frame(self.control_panel, bg='white')
+        stats_frame.pack(fill='x', pady=20)
         
-        tk.Label(self.stats_frame, text="Today's Stats", font=self.button_font,
-                bg='white').grid(row=0, columnspan=2, pady=5)
-                
-        tk.Label(self.stats_frame, text="Checked in:", bg='white').grid(row=1, column=0, sticky='e')
-        self.checked_in_label = tk.Label(self.stats_frame, text="0", bg='white', fg='#4CAF50')
-        self.checked_in_label.grid(row=1, column=1, sticky='w')
+        tk.Label(
+            stats_frame,
+            text="Today's Attendance",
+            font=self.subtitle_font,
+            bg='white',
+            fg=self.dark_color
+        ).pack(pady=(0, 10))
         
-        tk.Label(self.stats_frame, text="Pending:", bg='white').grid(row=2, column=0, sticky='e')
-        self.pending_label = tk.Label(self.stats_frame, text="0", bg='white', fg='#FF9800')
-        self.pending_label.grid(row=2, column=1, sticky='w')
+        # Stats cards
+        self.checked_in_card = self.create_stat_card(
+            stats_frame, "Checked In", "0", self.secondary_color)
+        self.checked_in_card.pack(side='left', fill='x', expand=True, padx=5)
+        
+        self.pending_card = self.create_stat_card(
+            stats_frame, "Pending", "0", self.warning_color)
+        self.pending_card.pack(side='left', fill='x', expand=True, padx=5)
         
         # Update stats
         self.update_stats()
+    
+    def create_stat_card(self, parent, title, value, color):
+        """Create a statistic card"""
+        card = tk.Frame(parent, bg='white', bd=1, relief='groove')
+        
+        tk.Label(
+            card,
+            text=title,
+            font=self.small_font,
+            bg='white',
+            fg=self.dark_color
+        ).pack(pady=(10, 0))
+        
+        tk.Label(
+            card,
+            text=value,
+            font=("Segoe UI", 18, 'bold'),
+            bg='white',
+            fg=color
+        ).pack(pady=5)
+        
+        return card
     
     def update_stats(self):
         """Update the statistics display"""
@@ -260,56 +367,74 @@ class AttendanceUI:
                 if record["Check-out"] == "" and record["Check-in"] != "":
                     pending += 1
         
-        self.checked_in_label.config(text=str(checked_in))
-        self.pending_label.config(text=str(pending))
+        # Update the stat cards
+        for widget in self.checked_in_card.winfo_children():
+            if isinstance(widget, tk.Label) and widget['text'].isdigit():
+                widget.config(text=str(checked_in))
+        
+        for widget in self.pending_card.winfo_children():
+            if isinstance(widget, tk.Label) and widget['text'].isdigit():
+                widget.config(text=str(pending))
         
         # Update every minute
         self.root.after(60000, self.update_stats)
     
     def create_status_bar(self):
         """Create the status bar at bottom"""
-        self.status = tk.Label(self.main_frame, 
-                             text=f"System Ready | {len(self.attendance_system.known_face_names)} users registered | Last sync: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", 
-                             font=self.small_font, bg='white', fg='#666',
-                             anchor='w')
-        self.status.place(x=30, y=530, width=1120)
+        self.status = tk.Label(
+            self.root, 
+            text=f"System Ready | {len(self.attendance_system.known_face_names)} users registered | Last sync: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", 
+            font=self.small_font, 
+            bg=self.dark_color, 
+            fg='white',
+            anchor='w',
+            padx=20
+        )
+        self.status.pack(side='bottom', fill='x', ipady=10)
     
     def create_admin_button(self):
         """Create admin settings button"""
-        self.admin_btn = tk.Label(self.main_frame, text="⚙", font=("Arial", 28), 
-                                 bg='white', fg='#999', cursor="hand2")
-        self.admin_btn.place(x=1120, y=572)
+        self.admin_btn = tk.Label(
+            self.header, 
+            text="⚙", 
+            font=("Arial", 20), 
+            bg=self.primary_color, 
+            fg='white', 
+            cursor="hand2"
+        )
+        self.admin_btn.pack(side='right', padx=10)
         self.admin_btn.bind("<Button-1>", lambda e: self.request_password())
     
     def create_user_button(self):
         """Create user profile button"""
-        self.user_btn = tk.Label(self.main_frame, text="👤", font=('Arial', 28),
-                                bg='white', fg='#999', cursor="hand2")
-        self.user_btn.place(x=10, y=570)
+        self.user_btn = tk.Label(
+            self.header, 
+            text="👤", 
+            font=('Arial', 20),
+            bg=self.primary_color, 
+            fg='white', 
+            cursor="hand2"
+        )
+        self.user_btn.pack(side='right', padx=10)
         self.user_btn.bind("<Button-1>", lambda e: self.show_user_panel())
-    
-    def create_logo(self):
-        """Create company logo"""
-        try:
-            self.logo_img = Image.open("assets/KFCS.ico").resize((200,150))
-            self.logo_tk = ImageTk.PhotoImage(self.logo_img)
-        except:
-            # Create placeholder if logo not found
-            self.logo_img = Image.new('RGB', (200, 80), color='#2196F3')
-            draw = ImageDraw.Draw(self.logo_img)
-            draw.text((10, 10), "KFCS Logo", fill="white")
-            self.logo_tk = ImageTk.PhotoImage(self.logo_img)
-            
-        tk.Label(self.control_panel, image=self.logo_tk, bg='white').pack(pady=20)
     
     def create_modern_button(self, parent, text, color, command):
         """Helper to create modern-looking buttons"""
-        btn = tk.Button(parent, text=text, command=command, 
-                       font=self.button_font, bg=color, fg='white',
-                       activebackground=self.lighten_color(color), 
-                       activeforeground='white',
-                       bd=0, relief='flat', highlightthickness=0,
-                       padx=30, pady=5, cursor="hand2")
+        btn = tk.Button(
+            parent, 
+            text=text, 
+            command=command, 
+            font=self.button_font, 
+            bg=color, 
+            fg='white',
+            activebackground=self.lighten_color(color), 
+            activeforeground='white',
+            bd=0, 
+            relief='flat', 
+            highlightthickness=0,
+            cursor="hand2",
+            padx=20
+        )
         
         # Hover effects
         btn.bind("<Enter>", lambda e: btn.config(bg=self.lighten_color(color)))
@@ -378,13 +503,15 @@ class AttendanceUI:
             if success:
                 messagebox.showinfo("Success", f"User {name} registered successfully!")
                 self.status.config(text=f"System Ready | {len(self.attendance_system.known_face_names)} users registered | Last sync: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-                
+    
     def request_password(self):
         """Request admin password and verify"""
-        password = simpledialog.askstring("Admin Authentication", 
-                                        "Enter Admin Password:", 
-                                        show='*',
-                                        parent=self.root)
+        password = simpledialog.askstring(
+            "Admin Authentication", 
+            "Enter Admin Password:", 
+            show='*',
+            parent=self.root
+        )
         if password is None:  # User cancelled
             return
             
@@ -392,43 +519,46 @@ class AttendanceUI:
             self.show_admin_panel()
         else:
             messagebox.showerror("Access Denied", "Incorrect admin password!")
-
     
     def show_admin_panel(self):
         """Show the admin panel with management features"""
         admin_win = tk.Toplevel(self.root)
-        admin_win.geometry("900x600+200+100")
+        admin_win.geometry("1000x700")
         admin_win.title("Admin Dashboard")
-        admin_win.configure(bg='#f5f5f5')
+        admin_win.configure(bg=self.light_color)
         
-        # Add password change option
-        def change_password():
-            old = simpledialog.askstring("Change Password", "Enter current password:", show='*')
-            if not old:
-                return
-                
-            new_pass = simpledialog.askstring("Change Password", "Enter new password:", show='*')
-            if not new_pass:
-                return
-                
-            confirm = simpledialog.askstring("Change Password", "Confirm new password:", show='*')
-            
-            if new_pass != confirm:
-                messagebox.showerror("Error", "New passwords don't match!")
-                return
-                
-            if self.attendance_system.change_admin_password(old, new_pass):
-                messagebox.showinfo("Success", "Password changed successfully!")
-            else:
-                messagebox.showerror("Error", "Incorrect current password!")
+        # Style configuration
+        style = ttk.Style()
+        style.configure("Admin.TFrame", background=self.light_color)
+        style.configure("Admin.TLabel", background=self.light_color)
+        style.configure("Admin.TButton", font=self.button_font)
+        
+        # Main container
+        main_frame = ttk.Frame(admin_win, style="Admin.TFrame")
+        main_frame.pack(fill='both', expand=True, padx=20, pady=20)
+        
+        # Header
+        header = ttk.Frame(main_frame, style="Admin.TFrame")
+        header.pack(fill='x', pady=(0, 20))
+        
+        ttk.Label(
+            header,
+            text="Admin Dashboard",
+            font=self.title_font,
+            style="Admin.TLabel"
+        ).pack(side='left')
         
         # Password change button
-        ttk.Button(admin_win, text="Change Admin Password", 
-                command=change_password).pack(pady=10)
-    
+        ttk.Button(
+            header,
+            text="Change Admin Password",
+            command=self.change_admin_password,
+            style="Admin.TButton"
+        ).pack(side='right')
+        
         # Notebook (tabbed interface)
-        notebook = ttk.Notebook(admin_win)
-        notebook.pack(fill='both', expand=True, padx=10, pady=10)
+        notebook = ttk.Notebook(main_frame)
+        notebook.pack(fill='both', expand=True)
         
         # --- Tab 1: Attendance Reports ---
         reports_frame = ttk.Frame(notebook)
@@ -446,21 +576,30 @@ class AttendanceUI:
         self.end_date = ttk.Entry(date_frame)
         self.end_date.pack(side='left', padx=5)
         
-        ttk.Button(date_frame, text="Filter", 
-                  command=lambda: self.filter_attendance(tree)).pack(side='left', padx=10)
+        ttk.Button(
+            date_frame, 
+            text="Filter", 
+            command=lambda: self.filter_attendance(tree)
+        ).pack(side='left', padx=10)
         
         # Treeview for data display
+        tree_frame = ttk.Frame(reports_frame)
+        tree_frame.pack(fill='both', expand=True, padx=10, pady=10)
+        
         columns = ("Date", "Name", "Check-in", "Check-out", "Hours")
-        tree = ttk.Treeview(reports_frame, columns=columns, show="headings")
+        tree = ttk.Treeview(tree_frame, columns=columns, show="headings")
         
         for col in columns:
             tree.heading(col, text=col)
             tree.column(col, width=120)
         
-        vsb = ttk.Scrollbar(reports_frame, orient="vertical", command=tree.yview)
-        tree.configure(yscrollcommand=vsb.set)
+        vsb = ttk.Scrollbar(tree_frame, orient="vertical", command=tree.yview)
+        hsb = ttk.Scrollbar(tree_frame, orient="horizontal", command=tree.xview)
+        tree.configure(yscrollcommand=vsb.set, xscrollcommand=hsb.set)
+        
         tree.pack(side='left', fill='both', expand=True)
         vsb.pack(side='right', fill='y')
+        hsb.pack(side='bottom', fill='x')
         
         # Insert data
         for record in sorted(self.attendance_system.attendance_log, 
@@ -474,53 +613,89 @@ class AttendanceUI:
                 f"{hours:.1f}" if hours else ""
             ))
         
-        
         # Export button
-        ttk.Button(reports_frame, text="Export to Excel", 
-                  command=lambda: self.export_to_excel(tree)).pack(pady=10)
+        ttk.Button(
+            reports_frame, 
+            text="Export to Excel", 
+            command=lambda: self.export_to_excel(tree)
+        ).pack(pady=10)
         
         # --- Tab 2: User Management ---
         user_frame = ttk.Frame(notebook)
         notebook.add(user_frame, text="User Management")
         
         # User list
-        user_list = ttk.Treeview(user_frame, columns=("Name"), show="headings")
+        user_tree_frame = ttk.Frame(user_frame)
+        user_tree_frame.pack(fill='both', expand=True, padx=10, pady=10)
+        
+        user_list = ttk.Treeview(user_tree_frame, columns=("Name"), show="headings")
         user_list.heading("Name", text="Name")
-        user_list.pack(fill='both', expand=True, padx=10, pady=10)
+        user_list.pack(side='left', fill='both', expand=True)
+        
+        scrollbar = ttk.Scrollbar(user_tree_frame, orient="vertical", command=user_list.yview)
+        user_list.configure(yscrollcommand=scrollbar.set)
+        scrollbar.pack(side='right', fill='y')
         
         # Add registered users
         for name in set(self.attendance_system.known_face_names):
             user_list.insert("", "end", values=(name,))
         
         # Action buttons
-        btn_frame = tk.Frame(user_frame)
+        btn_frame = ttk.Frame(user_frame)
         btn_frame.pack(pady=10)
         
-        ttk.Button(btn_frame, text="Remove User", 
-                  command=lambda: self.remove_user(user_list)).pack(side='left', padx=5)
+        ttk.Button(
+            btn_frame, 
+            text="Remove User", 
+            command=lambda: self.remove_user(user_list)
+        ).pack(side='left', padx=5)
         
         # --- Tab 3: System Settings ---
         settings_frame = ttk.Frame(notebook)
         notebook.add(settings_frame, text="System Settings")
         
         # Confidence threshold setting
-        ttk.Label(settings_frame, text="Recognition Confidence Threshold:").pack(pady=5)
-        self.confidence_slider = ttk.Scale(settings_frame, from_=0.5, to=1.0, 
-                                         value=self.attendance_system.min_confidence)
-        self.confidence_slider.pack(pady=5)
+        ttk.Label(
+            settings_frame, 
+            text="Recognition Confidence Threshold:",
+            font=self.subtitle_font
+        ).pack(pady=10)
         
-        ttk.Button(settings_frame, text="Save Settings", 
-                  command=self.save_settings).pack(pady=10)
-                
-        #request password function
-        def request_password():
-            entered = simpledialog.askstring("Admin Login", "Enter Admin Password:", show='*')
-            ADMIN_PASSWORD = 'admin123'
-            if entered == ADMIN_PASSWORD:
-                self.show_admin_pannel()
-            else:
-                messagebox.showerror("Access Denied", "Incorrect password!") 
+        self.confidence_slider = ttk.Scale(
+            settings_frame, 
+            from_=0.5, 
+            to=1.0, 
+            value=self.attendance_system.min_confidence
+        )
+        self.confidence_slider.pack(pady=5, padx=20, fill='x')
+        
+        ttk.Button(
+            settings_frame, 
+            text="Save Settings", 
+            command=self.save_settings
+        ).pack(pady=20)
+    
+    def change_admin_password(self):
+        """Change admin password dialog"""
+        old = simpledialog.askstring("Change Password", "Enter current password:", show='*')
+        if not old:
+            return
             
+        new_pass = simpledialog.askstring("Change Password", "Enter new password:", show='*')
+        if not new_pass:
+            return
+            
+        confirm = simpledialog.askstring("Change Password", "Confirm new password:", show='*')
+        
+        if new_pass != confirm:
+            messagebox.showerror("Error", "New passwords don't match!")
+            return
+            
+        if self.attendance_system.change_admin_password(old, new_pass):
+            messagebox.showinfo("Success", "Password changed successfully!")
+        else:
+            messagebox.showerror("Error", "Incorrect current password!")
+    
     def filter_attendance(self, tree):
         """Filter attendance records by date range"""
         start_date = self.start_date.get()
@@ -556,7 +731,7 @@ class AttendanceUI:
             return None
     
     def export_to_excel(self, tree):
-        """Export attendance data to Excel on desktop"""
+        """Export attendance data to Excel"""
         try:
             # Get all items from treeview
             items = tree.get_children()
@@ -630,22 +805,30 @@ class AttendanceUI:
             return
             
         user_win = tk.Toplevel(self.root)
-        user_win.geometry("900x600")
+        user_win.geometry("900x700")
         user_win.title(f"{self.current_user}'s Attendance Dashboard")
-        user_win.configure(bg='#f0f2f5')
+        user_win.configure(bg=self.light_color)
 
         # Header
-        header = tk.Frame(user_win, bg='#2c3e50', height=100)
+        header = tk.Frame(user_win, bg=self.primary_color, height=80)
         header.pack(fill='x')
         
-        tk.Label(header, 
-                text=f"{self.current_user}", 
-                font=("Arial", 20, 'bold'), 
-                bg='#2c3e50', fg='white').pack(side='left', padx=20, pady=10)
+        tk.Label(
+            header, 
+            text=f"{self.current_user}", 
+            font=("Segoe UI", 20, 'bold'), 
+            bg=self.primary_color, 
+            fg='white'
+        ).pack(side='left', padx=20, pady=20)
         
         # Today's status card
-        status_frame = tk.Frame(user_win, bg='white', bd=2, relief='groove')
-        status_frame.pack(fill='x', padx=20, pady=10)
+        status_card = tk.Frame(
+            user_win, 
+            bg='white', 
+            bd=1, 
+            relief='groove'
+        )
+        status_card.pack(fill='x', padx=20, pady=20)
         
         today = datetime.now().strftime("%Y-%m-%d")
         today_record = next((r for r in self.attendance_system.attendance_log 
@@ -655,35 +838,44 @@ class AttendanceUI:
                       "🟢 Checked out" if today_record else 
                       "🔴 Not checked in today")
         
-        tk.Label(status_frame, text="TODAY'S STATUS", 
-                font=("Arial", 12, 'bold'), bg='white').grid(row=0, column=0, sticky='w', padx=10)
-        tk.Label(status_frame, text=status_text, 
-                font=("Arial", 14), bg='white').grid(row=1, column=0, sticky='w', padx=10, pady=5)
+        tk.Label(
+            status_card, 
+            text="TODAY'S STATUS", 
+            font=("Segoe UI", 12, 'bold'), 
+            bg='white'
+        ).grid(row=0, column=0, sticky='w', padx=10, pady=(10, 0))
+        
+        tk.Label(
+            status_card, 
+            text=status_text, 
+            font=("Segoe UI", 14), 
+            bg='white'
+        ).grid(row=1, column=0, sticky='w', padx=10, pady=(0, 10))
         
         # Metric cards
-        metrics_frame = tk.Frame(user_win, bg='#f0f2f5')
-        metrics_frame.pack(fill='x', padx=20, pady=10)
+        metrics_frame = tk.Frame(user_win, bg=self.light_color)
+        metrics_frame.pack(fill='x', padx=20, pady=(0, 20))
         
         # Card 1: Present Days
         present_days = len([r for r in self.attendance_system.attendance_log 
                           if r["Name"] == self.current_user and r["Check-in"]])
-        self._create_metric_card(metrics_frame, "Present Days", present_days, "#4CAF50", 0, 0)
+        self._create_metric_card(metrics_frame, "Present Days", present_days, self.secondary_color, 0, 0)
         
         # Card 2: Avg Hours
         avg_hours = self._calculate_avg_hours(self.current_user)
-        self._create_metric_card(metrics_frame, "Avg Hours/Day", f"{avg_hours:.1f}h", "#2196F3", 0, 1)
+        self._create_metric_card(metrics_frame, "Avg Hours/Day", f"{avg_hours:.1f}h", self.primary_color, 0, 1)
         
         # Card 3: Late Arrivals
         late_days = len([r for r in self.attendance_system.attendance_log 
                         if r["Name"] == self.current_user and self._is_late(r["Check-in"])])
-        self._create_metric_card(metrics_frame, "Late Arrivals", late_days, "#FF9800", 0, 2)
+        self._create_metric_card(metrics_frame, "Late Arrivals", late_days, self.warning_color, 0, 2)
 
         # Attendance history
         history_frame = tk.Frame(user_win)
-        history_frame.pack(fill='both', expand=True, padx=20, pady=10)
+        history_frame.pack(fill='both', expand=True, padx=20, pady=(0, 20))
         
         columns = ("Date", "Check-in", "Check-out", "Hours", "Status")
-        tree = ttk.Treeview(history_frame, columns=columns, show="headings", height=10)
+        tree = ttk.Treeview(history_frame, columns=columns, show="headings", height=15)
         
         for col in columns:
             tree.heading(col, text=col)
@@ -712,25 +904,48 @@ class AttendanceUI:
         scrollbar.pack(side="right", fill="y")
 
         # Action buttons
-        actions_frame = tk.Frame(user_win, bg='#f0f2f5')
-        actions_frame.pack(fill='x', pady=10)
+        actions_frame = tk.Frame(user_win, bg=self.light_color)
+        actions_frame.pack(fill='x', pady=(0, 20), padx=20)
         
-        ttk.Button(actions_frame, 
-                  text="Export My Attendance", 
-                  command=lambda: self.export_user_data(self.current_user)).pack(side='left', padx=10)
+        ttk.Button(
+            actions_frame, 
+            text="Export My Attendance", 
+            command=lambda: self.export_user_data(self.current_user)
+        ).pack(side='left', padx=5)
         
-        ttk.Button(actions_frame, 
-                  text="Request Correction", 
-                  command=self.request_correction).pack(side='left')
+        ttk.Button(
+            actions_frame, 
+            text="Request Correction", 
+            command=self.request_correction
+        ).pack(side='left', padx=5)
     
     def _create_metric_card(self, parent, title, value, color, row, col):
         """Helper to create metric cards"""
-        card = tk.Frame(parent, bg='white', bd=1, relief='groove')
+        card = tk.Frame(
+            parent, 
+            bg='white', 
+            bd=1, 
+            relief='groove'
+        )
         card.grid(row=row, column=col, padx=5, pady=5, sticky='nsew')
+        parent.grid_columnconfigure(col, weight=1)
         
-        tk.Label(card, text=title, font=("Arial", 10), bg='white').pack(pady=(10,0))
-        tk.Label(card, text=value, font=("Arial", 18, 'bold'), bg='white', 
-                fg=color).pack(pady=5)
+        tk.Label(
+            card, 
+            text=title, 
+            font=("Segoe UI", 10), 
+            bg='white'
+        ).pack(pady=(10, 0))
+        
+        tk.Label(
+            card, 
+            text=value, 
+            font=("Segoe UI", 18, 'bold'), 
+            bg='white', 
+            fg=color
+        ).pack(pady=5)
+        
+        return card
     
     def _calculate_avg_hours(self, user_name):
         """Calculate average working hours for a user"""
@@ -785,9 +1000,19 @@ class AttendanceUI:
             
             # Create DataFrame
             df = pd.DataFrame(user_records)
+            
+            # Get desktop path
+            desktop = os.path.join(os.path.expanduser("~"), "Desktop")
             filename = f"{user_name}_attendance_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
-            df.to_excel(filename, index=False)
-            messagebox.showinfo("Success", f"Data exported to {filename}")
+            filepath = os.path.join(desktop, filename)
+            
+            # Export to Excel
+            df.to_excel(filepath, index=False)
+            
+            messagebox.showinfo(
+                "Success", 
+                f"Your attendance data has been exported to:\n{filename}"
+            )
         except Exception as e:
             messagebox.showerror("Error", f"Failed to export: {str(e)}")
     

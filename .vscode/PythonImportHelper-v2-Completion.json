@@ -268,7 +268,7 @@
         "kind": 6,
         "importPath": "modules.ui",
         "description": "modules.ui",
-        "peekOfCode": "class AttendanceUI:\n    def __init__(self):\n        self.root = tk.Tk()\n        self.root.geometry(\"1280x720+100+50\")\n        self.root.title(\"KFCS Attendance Pro\")\n        self.root.configure(bg='white')\n        self.root.tk.call('wm', 'iconphoto', self.root._w, tk.PhotoImage(width=1, height=1))\n        self.root.protocol(\"WM_DELETE_WINDOW\", self.on_close)\n        # Initialize systems\n        self.attendance_system = AttendanceSystem()",
+        "peekOfCode": "class AttendanceUI:\n    def __init__(self):\n        self.root = tk.Tk()\n        self.root.geometry(\"1280x800+100+50\")\n        self.root.title(\"KFCS Attendance Pro\")\n        self.root.configure(bg='#f5f7fa')\n        self.root.tk.call('wm', 'iconphoto', self.root._w, tk.PhotoImage(width=1, height=1))\n        self.root.protocol(\"WM_DELETE_WINDOW\", self.on_close)\n        # Custom color scheme\n        self.primary_color = \"#4e73df\"",
         "detail": "modules.ui",
         "documentation": {}
     },
