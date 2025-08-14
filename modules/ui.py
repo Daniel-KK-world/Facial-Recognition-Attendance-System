@@ -2,7 +2,7 @@ from modules import FaceProcessor, AttendanceSystem
 import tkinter as tk
 from tkinter import ttk, simpledialog, messagebox
 import tkinter.font as tkFont
-from PIL import Image, ImageTk, ImageDraw
+from PIL import Image, ImageTk
 import cv2
 import os
 import pandas as pd
