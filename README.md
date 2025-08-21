@@ -1,5 +1,7 @@
 # 📸 Real-Time Facial Recognition Attendance System
-![image](https://github.com/user-attachments/assets/1b688437-ee45-4dd0-bc9e-ab75bb567e4b)
+## V2 UI Revamp 
+<img width="1081" height="584" alt="image" src="https://github.com/user-attachments/assets/075af8d5-86d8-4e15-9c5f-3ec2179316fc" />
+
 
 
 ## Developed for Kantanka Financial Co-operative Society
@@ -77,7 +79,8 @@ Python 3.7+
 Windows users(developers) must install the Visual C++ package in order to build. 
 CMake
 
-PyInstaller (for .exe conversion)
+PyInstaller (for packaging)
+Upon the final version can move to docker.  
 
 📸 Screenshots
 ## Admin Dashboard 
