@@ -9,8 +9,7 @@ Features to add or even remove...
 
 1. No check in or check out or register new user 
 2. Just camera 
-3. Setting for admin only 
-4. Register users not for admin 
+3. Setting for admin only  
 5. authentication for all new users 
 6. Singing in should be automatic so should signing out
 7. Register new user should be in its own pop up page
@@ -21,6 +20,32 @@ My improvements
 2. Working hours chart 
 3. Leave management system. 
 4. Filter records (weekly and monthly reports) 
+
+your_project/
+├─ main.py               # your entry point (already have)
+├─ data/                 # files already used by app
+│  ├─ facial_recognition.dat
+│  └─ attendance.csv
+├─ kfcs/                 # new package root (name it what you like)
+│  ├─ __init__.py
+│  ├─ config.py          # app-wide constants/paths (soon)
+│  ├─ domain/            # plain data types, no IO
+│  │  └─ __init__.py
+│  ├─ repositories/      # file/database access lives here
+│  │  └─ __init__.py
+│  ├─ services/          # pure logic; uses repositories
+│  │  └─ __init__.py
+│  ├─ processing/        # background workers (FaceProcessor)
+│  │  ├─ __init__.py
+│  │  └─ face_processor.py   # (we'll move your class here later)
+│  └─ ui/                # all tkinter views/widgets
+│     ├─ __init__.py
+│     └─ app.py              # (we'll move AttendanceUI here later)
+└─ modules/              # your current folder that holds the 3 files now
+   ├─ __init__.py
+   ├─ attendance.py
+   ├─ face_processor.py
+   └─ ui.py
 
 
 
