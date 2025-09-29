@@ -304,6 +304,8 @@ class AttendanceUI:
             button_frame, "CHECK OUT", self.danger_color, self.check_out)
         self.logout_btn.pack(fill='x', pady=5, ipady=8)
         
+        # REMOVED: Register New User button from main interface
+        
         # Stats frame
         stats_frame = tk.Frame(self.control_panel, bg='white')
         stats_frame.pack(fill='x', pady=20)
@@ -471,7 +473,7 @@ class AttendanceUI:
             messagebox.showwarning("Warning", message)
     
     def register_user(self):
-        """Register a new user with face capture"""
+        """Register a new user with face capture - Now only accessible via Admin Panel"""
         name = simpledialog.askstring("Register New User", "Enter user's full name:", parent=self.root)
         if not name:
             return
@@ -640,12 +642,29 @@ class AttendanceUI:
         btn_frame = ttk.Frame(user_frame)
         btn_frame.pack(pady=10)
         
-        ttk.Button(
+        # ADDED: Register User button in Admin Panel
+        tk.Button(
+            btn_frame, 
+            text="➕ REGISTER NEW USER",
+            command=self.register_user,
+            bg=self.primary_color,  # Green color
+            fg='white',
+            font=("Segoe UI", 20, 'bold'),  # Bigger and bold
+            padx=20,
+            pady=10,
+            bd=0,
+            relief='raised'
+        ).pack(side='left', padx=10, pady=10)
+        
+        tk.Button(  # <-- Change ttk.Button to tk.Button
             btn_frame, 
             text="Remove User", 
+            bg=self.danger_color,
+            fg='white',
+            font=("Segoe UI", 10, 'bold'),
             command=lambda: self.remove_user(user_list)
         ).pack(side='left', padx=5)
-        
+                
         # --- Tab 3: System Settings ---
         settings_frame = ttk.Frame(notebook)
         notebook.add(settings_frame, text="System Settings")
