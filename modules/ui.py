@@ -304,10 +304,6 @@ class AttendanceUI:
             button_frame, "CHECK OUT", self.danger_color, self.check_out)
         self.logout_btn.pack(fill='x', pady=5, ipady=8)
         
-        self.register_btn = self.create_modern_button(
-            button_frame, "REGISTER NEW USER", self.primary_color, self.register_user)
-        self.register_btn.pack(fill='x', pady=5, ipady=8)
-        
         # Stats frame
         stats_frame = tk.Frame(self.control_panel, bg='white')
         stats_frame.pack(fill='x', pady=20)

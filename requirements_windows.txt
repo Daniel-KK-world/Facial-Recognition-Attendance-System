@@ -7,12 +7,14 @@ face_recognition==1.3.0
 Features to add or even remove... 
 (User Stories)
 
-1. No check in or check out or register new user 
+1. No check in or check out or register new user (Dpne ish) Create trigger logic later.   
 2. Just camera 
-3. Setting for admin only  
-5. authentication for all new users 
-6. Singing in should be automatic so should signing out
-7. Register new user should be in its own pop up page
+3. Setting for admin only (already done | Check what they actually want next meeting)  
+5. authentication for all new users (again already exsits)
+
+6. Checking in should be automatic so should checking out
+
+7. Register new user should be in its own pop up page ( outsourced to the web)   
 
 
 My improvements 
