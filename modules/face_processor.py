@@ -2,10 +2,10 @@ import face_recognition
 import queue 
 import threading 
 import cv2 
-
+from datetime import datetime, timedelta
 
 class FaceProcessor:
-    """Optimized but reliable face processing"""
+    """Optimized but reliable face processing with automated attendance"""
     def __init__(self, attendance_system):
         self.attendance_system = attendance_system
         self.frame_queue = queue.Queue(maxsize=1)
@@ -16,9 +16,14 @@ class FaceProcessor:
         self.last_encodings = []
         
         # Tune these for your hardware
-        self.downscale_factor = 0.3  # 30% of original size
-        self.detection_every_n_frames = 20  # Process every other frame
+        self.downscale_factor = 0.3
+        self.detection_every_n_frames = 20
         self.frame_counter = 0
+        
+        # NEW: Automated attendance tracking
+        self.face_presence_tracker = {}  # {name: {"last_seen": timestamp, "status": "present/absent"}}
+        self.auto_check_delay = 30  # seconds before auto check-out
+        self.last_auto_check = datetime.now()
 
     def start(self):
         self.running = True
@@ -46,7 +51,7 @@ class FaceProcessor:
                 if self.frame_counter % self.detection_every_n_frames == 0:
                     face_locations = face_recognition.face_locations(
                         rgb_small,
-                        number_of_times_to_upsample=1,  # Balanced accuracy/speed
+                        number_of_times_to_upsample=1,
                         model="hog"
                     )
                     
@@ -61,6 +66,10 @@ class FaceProcessor:
                         face_locations,
                         num_jitters=1
                     )
+                
+                # NEW: Automated attendance logic
+                current_time = datetime.now()
+                current_faces = set()
                 
                 # Prepare results using cached data
                 results = []
@@ -78,6 +87,27 @@ class FaceProcessor:
                         "confidence": confidence,
                         "is_live": is_live
                     })
+                    
+                    # NEW: Track recognized faces for automated attendance
+                    if name != "Unknown" and confidence > 0.7:
+                        current_faces.add(name)
+                        
+                        # Auto check-in for new detections
+                        if name not in self.face_presence_tracker:
+                            status = self.attendance_system.get_attendance_status(name)
+                            if status == "absent":
+                                success, message = self.attendance_system.auto_check_in(name)
+                                if success:
+                                    print(f"✅ Auto check-in: {name}")
+                        
+                        # Update presence tracker
+                        self.face_presence_tracker[name] = {
+                            "last_seen": current_time,
+                            "status": "present"
+                        }
+                
+                # NEW: Check for departed faces (auto check-out)
+                self._check_departures(current_faces, current_time)
                 
                 # Update results
                 if not self.result_queue.empty():
@@ -92,3 +122,34 @@ class FaceProcessor:
             except Exception as e:
                 print(f"Processing error: {e}")
                 continue
+
+    def _check_departures(self, current_faces, current_time):
+        """Check for faces that have left and trigger auto check-out"""
+        departed_faces = set(self.face_presence_tracker.keys()) - current_faces
+        
+        for name in departed_faces:
+            last_seen = self.face_presence_tracker[name]["last_seen"]
+            time_absent = (current_time - last_seen).total_seconds()
+            
+            # If person has been absent for the delay period
+            if time_absent > self.auto_check_delay:
+                status = self.attendance_system.get_attendance_status(name)
+                
+                # Only check out if they're currently checked in
+                if status == "checked_in":
+                    success, message = self.attendance_system.auto_check_out(name)
+                    if success:
+                        print(f"🚪 Auto check-out: {name} (absent for {time_absent:.0f}s)")
+                    else:
+                        # If auto check-out failed but person left early, force check-out
+                        current_hour = current_time.hour
+                        if current_hour < 16:  # Before normal work end
+                            success, message = self.attendance_system.force_check_out(name)
+                            if success:
+                                print(f"🚪 Early departure: {name}")
+                
+                # Remove from tracker
+                del self.face_presence_tracker[name]
+            else:
+                # Update status to absent but keep tracking
+                self.face_presence_tracker[name]["status"] = "absent"

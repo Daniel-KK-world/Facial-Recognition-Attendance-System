@@ -1,4 +1,5 @@
-from modules import FaceProcessor, AttendanceSystem
+from modules.face_processor import FaceProcessor
+from modules.attendance_system import AttendanceSystem
 import tkinter as tk
 from tkinter import ttk, simpledialog, messagebox
 import tkinter.font as tkFont
@@ -10,14 +11,12 @@ from datetime import datetime
 import face_recognition
 import queue
 from collections import deque
-import ctypes
-from modules.face_processor import FaceProcessor
 
 class AttendanceUI:
     def __init__(self):
         self.root = tk.Tk()
         self.root.geometry("1280x800+100+50")
-        self.root.title("KFCS Attendance Pro")
+        self.root.title("KFCS Attendance Pro - Automated")
         self.root.configure(bg='#f5f7fa')
         self.root.tk.call('wm', 'iconphoto', self.root._w, tk.PhotoImage(width=1, height=1))
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
@@ -74,7 +73,7 @@ class AttendanceUI:
         # Logo and title
         self.logo_label = tk.Label(
             self.header, 
-            text="KFCS Attendance Pro", 
+            text="KFCS Attendance Pro - Automated", 
             font=self.title_font,
             bg=self.primary_color,
             fg='white',
@@ -143,7 +142,7 @@ class AttendanceUI:
         # Title for webcam section
         tk.Label(
             self.webcam_card,
-            text="Face Recognition",
+            text="Automated Face Recognition",
             font=self.subtitle_font,
             bg='white',
             fg=self.dark_color
@@ -244,9 +243,19 @@ class AttendanceUI:
         if current_user:
             self.current_user = current_user
             self.current_user_label.config(text=current_user, fg=self.secondary_color)
+            
+            # Update automated status display
+            status = self.attendance_system.get_attendance_status(current_user)
+            if status == "checked_in":
+                self.auto_status_label.config(text=f"✅ {current_user} - Checked In", fg=self.secondary_color)
+            elif status == "checked_out":
+                self.auto_status_label.config(text=f"🚪 {current_user} - Checked Out", fg=self.danger_color)
+            else:
+                self.auto_status_label.config(text=f"🟡 {current_user} - Processing...", fg=self.warning_color)
         else:
             self.current_user = None
             self.current_user_label.config(text="Not detected", fg=self.dark_color)
+            self.auto_status_label.config(text="🔍 Looking for faces...", fg=self.dark_color)
         
         # Convert to PhotoImage
         img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -286,25 +295,44 @@ class AttendanceUI:
         # Title for control panel
         tk.Label(
             self.control_panel,
-            text="Attendance Controls",
+            text="Automated Attendance",
             font=self.subtitle_font,
             bg='white',
             fg=self.dark_color
         ).pack(pady=(10, 20))
         
-        # Modern buttons
-        button_frame = tk.Frame(self.control_panel, bg='white')
-        button_frame.pack(fill='x', pady=10)
+        # Automated status display
+        status_frame = tk.Frame(self.control_panel, bg='white')
+        status_frame.pack(fill='x', pady=20)
+
+        # Current status label
+        self.auto_status_label = tk.Label(
+            status_frame,
+            text="🔍 Looking for faces...",
+            font=("Segoe UI", 12),
+            bg='white',
+            fg=self.dark_color
+        )
+        self.auto_status_label.pack(pady=10)
+
+        # Instructions
+        instructions_text = (
+            "• System automatically checks you in/out\n"
+            "• Just look at the camera naturally\n"
+            "• Check-in: 6 AM - 11 AM\n"
+            "• Check-out: Auto-detected when you leave\n"
+            "• Early departures are handled automatically"
+        )
         
-        self.login_btn = self.create_modern_button(
-            button_frame, "CHECK IN", self.secondary_color, self.check_in)
-        self.login_btn.pack(fill='x', pady=5, ipady=8)
-        
-        self.logout_btn = self.create_modern_button(
-            button_frame, "CHECK OUT", self.danger_color, self.check_out)
-        self.logout_btn.pack(fill='x', pady=5, ipady=8)
-        
-        # REMOVED: Register New User button from main interface
+        instructions = tk.Label(
+            status_frame,
+            text=instructions_text,
+            font=self.small_font,
+            bg='white',
+            fg=self.dark_color,
+            justify='left'
+        )
+        instructions.pack(pady=10)
         
         # Stats frame
         stats_frame = tk.Frame(self.control_panel, bg='white')
@@ -324,7 +352,7 @@ class AttendanceUI:
         self.checked_in_card.pack(side='left', fill='x', expand=True, padx=5)
         
         self.pending_card = self.create_stat_card(
-            stats_frame, "Pending", "0", self.warning_color)
+            stats_frame, "Present Now", "0", self.primary_color)
         self.pending_card.pack(side='left', fill='x', expand=True, padx=5)
         
         # Update stats
@@ -342,13 +370,20 @@ class AttendanceUI:
             fg=self.dark_color
         ).pack(pady=(10, 0))
         
-        tk.Label(
+        value_label = tk.Label(
             card,
             text=value,
             font=("Segoe UI", 18, 'bold'),
             bg='white',
             fg=color
-        ).pack(pady=5)
+        )
+        value_label.pack(pady=5)
+        
+        # Store reference to update later
+        if title == "Checked In":
+            self.checked_in_value = value_label
+        elif title == "Present Now":
+            self.present_now_value = value_label
         
         return card
     
@@ -356,32 +391,27 @@ class AttendanceUI:
         """Update the statistics display"""
         today = datetime.now().strftime("%Y-%m-%d")
         checked_in = 0
-        pending = 0
+        present_now = 0
         
         for record in self.attendance_system.attendance_log:
             if record["Date"] == today:
                 if record["Check-in"] != "":
                     checked_in += 1
                 if record["Check-out"] == "" and record["Check-in"] != "":
-                    pending += 1
+                    present_now += 1
         
         # Update the stat cards
-        for widget in self.checked_in_card.winfo_children():
-            if isinstance(widget, tk.Label) and widget['text'].isdigit():
-                widget.config(text=str(checked_in))
+        self.checked_in_value.config(text=str(checked_in))
+        self.present_now_value.config(text=str(present_now))
         
-        for widget in self.pending_card.winfo_children():
-            if isinstance(widget, tk.Label) and widget['text'].isdigit():
-                widget.config(text=str(pending))
-        
-        # Update every minute
-        self.root.after(60000, self.update_stats)
+        # Update every 30 seconds
+        self.root.after(30000, self.update_stats)
     
     def create_status_bar(self):
         """Create the status bar at bottom"""
         self.status = tk.Label(
             self.root, 
-            text=f"System Ready | {len(self.attendance_system.known_face_names)} users registered | Last sync: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", 
+            text=f"Automated System Ready | {len(self.attendance_system.known_face_names)} users registered | Last sync: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", 
             font=self.small_font, 
             bg=self.dark_color, 
             fg='white',
@@ -446,32 +476,6 @@ class AttendanceUI:
         lighter = tuple(min(255, int(c + (255 - c) * amount)) for c in rgb)
         return f'#{lighter[0]:02x}{lighter[1]:02x}{lighter[2]:02x}'
     
-    def check_in(self):
-        """Handle check-in action"""
-        if not hasattr(self, 'current_user') or not self.current_user:
-            messagebox.showwarning("Warning", "No recognized user detected!")
-            return
-        
-        success, message = self.attendance_system.record_attendance(self.current_user, "Check-in")
-        if success:
-            messagebox.showinfo("Success", message)
-            self.update_stats()
-        else:
-            messagebox.showwarning("Warning", message)
-    
-    def check_out(self):
-        """Handle check-out action"""
-        if not hasattr(self, 'current_user') or not self.current_user:
-            messagebox.showwarning("Warning", "No recognized user detected!")
-            return
-        
-        success, message = self.attendance_system.record_attendance(self.current_user, "Check-out")
-        if success:
-            messagebox.showinfo("Success", message)
-            self.update_stats()
-        else:
-            messagebox.showwarning("Warning", message)
-    
     def register_user(self):
         """Register a new user with face capture - Now only accessible via Admin Panel"""
         name = simpledialog.askstring("Register New User", "Enter user's full name:", parent=self.root)
@@ -500,7 +504,7 @@ class AttendanceUI:
             success = self.attendance_system.register_new_user(name, samples)
             if success:
                 messagebox.showinfo("Success", f"User {name} registered successfully!")
-                self.status.config(text=f"System Ready | {len(self.attendance_system.known_face_names)} users registered | Last sync: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+                self.status.config(text=f"Automated System Ready | {len(self.attendance_system.known_face_names)} users registered | Last sync: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     
     def request_password(self):
         """Request admin password and verify"""
@@ -522,7 +526,7 @@ class AttendanceUI:
         """Show the admin panel with management features"""
         admin_win = tk.Toplevel(self.root)
         admin_win.geometry("1000x700")
-        admin_win.title("Admin Dashboard")
+        admin_win.title("Admin Dashboard - Automated System")
         admin_win.configure(bg=self.light_color)
         
         # Style configuration
@@ -541,7 +545,7 @@ class AttendanceUI:
         
         ttk.Label(
             header,
-            text="Admin Dashboard",
+            text="Admin Dashboard - Automated System",
             font=self.title_font,
             style="Admin.TLabel"
         ).pack(side='left')
@@ -584,7 +588,7 @@ class AttendanceUI:
         tree_frame = ttk.Frame(reports_frame)
         tree_frame.pack(fill='both', expand=True, padx=10, pady=10)
         
-        columns = ("Date", "Name", "Check-in", "Check-out", "Hours")
+        columns = ("Date", "Name", "Check-in", "Check-out", "Hours", "Type")
         tree = ttk.Treeview(tree_frame, columns=columns, show="headings")
         
         for col in columns:
@@ -603,12 +607,15 @@ class AttendanceUI:
         for record in sorted(self.attendance_system.attendance_log, 
                            key=lambda x: x["Date"], reverse=True):
             hours = self.calculate_hours(record["Check-in"], record["Check-out"])
+            # Determine if auto or manual (for now, assume auto)
+            record_type = "Auto" if record["Check-in"] else "Manual"
             tree.insert("", "end", values=(
                 record["Date"],
                 record["Name"],
                 record["Check-in"],
                 record["Check-out"],
-                f"{hours:.1f}" if hours else ""
+                f"{hours:.1f}" if hours else "",
+                record_type
             ))
         
         # Export button
@@ -647,22 +654,42 @@ class AttendanceUI:
             btn_frame, 
             text="➕ REGISTER NEW USER",
             command=self.register_user,
-            bg=self.primary_color,  # Green color
+            bg=self.secondary_color,
             fg='white',
-            font=("Segoe UI", 20, 'bold'),  # Bigger and bold
+            font=("Segoe UI", 12, 'bold'),
             padx=20,
             pady=10,
             bd=0,
             relief='raised'
         ).pack(side='left', padx=10, pady=10)
         
-        tk.Button(  # <-- Change ttk.Button to tk.Button
+        tk.Button(
             btn_frame, 
             text="Remove User", 
             bg=self.danger_color,
             fg='white',
             font=("Segoe UI", 10, 'bold'),
             command=lambda: self.remove_user(user_list)
+        ).pack(side='left', padx=5)
+        
+        # Manual override buttons
+        override_frame = ttk.Frame(user_frame)
+        override_frame.pack(pady=10)
+        
+        tk.Button(
+            override_frame,
+            text="Manual Check-in Selected",
+            bg=self.primary_color,
+            fg='white',
+            command=lambda: self.manual_check_in(user_list)
+        ).pack(side='left', padx=5)
+        
+        tk.Button(
+            override_frame,
+            text="Manual Check-out Selected",
+            bg=self.warning_color,
+            fg='white',
+            command=lambda: self.manual_check_out(user_list)
         ).pack(side='left', padx=5)
                 
         # --- Tab 3: System Settings ---
@@ -689,6 +716,36 @@ class AttendanceUI:
             text="Save Settings", 
             command=self.save_settings
         ).pack(pady=20)
+    
+    def manual_check_in(self, user_list):
+        """Manual check-in for selected user"""
+        selected = user_list.selection()
+        if not selected:
+            messagebox.showwarning("Warning", "Please select a user")
+            return
+        
+        name = user_list.item(selected[0], 'values')[0]
+        success, message = self.attendance_system.record_attendance(name, "Check-in")
+        if success:
+            messagebox.showinfo("Success", f"Manual check-in for {name}")
+            self.update_stats()
+        else:
+            messagebox.showwarning("Warning", message)
+    
+    def manual_check_out(self, user_list):
+        """Manual check-out for selected user"""
+        selected = user_list.selection()
+        if not selected:
+            messagebox.showwarning("Warning", "Please select a user")
+            return
+        
+        name = user_list.item(selected[0], 'values')[0]
+        success, message = self.attendance_system.record_attendance(name, "Check-out")
+        if success:
+            messagebox.showinfo("Success", f"Manual check-out for {name}")
+            self.update_stats()
+        else:
+            messagebox.showwarning("Warning", message)
     
     def change_admin_password(self):
         """Change admin password dialog"""
@@ -730,7 +787,8 @@ class AttendanceUI:
                     record["Name"],
                     record["Check-in"],
                     record["Check-out"],
-                    f"{hours:.1f}" if hours else ""
+                    f"{hours:.1f}" if hours else "",
+                    "Auto"  # Assuming all are auto for now
                 ))
     
     def calculate_hours(self, check_in, check_out):
@@ -748,29 +806,22 @@ class AttendanceUI:
     def export_to_excel(self, tree):
         """Export attendance data to Excel"""
         try:
-            # Get all items from treeview
             items = tree.get_children()
             data = []
             columns = tree["columns"]
             
-            # Get column headers (using the 'text' from each column heading)
             headers = [tree.heading(col)["text"] for col in columns]
             
             for item in items:
                 values = tree.item(item, "values")
-                data.append(dict(zip(headers, values)))  # Use headers instead of column IDs
+                data.append(dict(zip(headers, values)))
             
-            # Create DataFrame
             df = pd.DataFrame(data)
             
-            # Get desktop path (works for Windows, macOS, and Linux)
             desktop = os.path.join(os.path.expanduser("~"), "Desktop")
-            
-            # Create filename with timestamp
             filename = f"attendance_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
             filepath = os.path.join(desktop, filename)
             
-            # Export to Excel
             df.to_excel(filepath, index=False)
             
             messagebox.showinfo(
@@ -793,18 +844,14 @@ class AttendanceUI:
         name = user_list.item(selected[0], 'values')[0]
         
         if messagebox.askyesno("Confirm", f"Remove user {name}? This cannot be undone."):
-            # Remove from known faces
             indices = [i for i, x in enumerate(self.attendance_system.known_face_names) if x == name]
             for index in sorted(indices, reverse=True):
                 del self.attendance_system.known_face_names[index]
                 del self.attendance_system.known_face_encodings[index]
             
-            # Save changes
             self.attendance_system.save_known_faces()
-            
-            # Update UI
             user_list.delete(selected[0])
-            self.status.config(text=f"System Ready | {len(self.attendance_system.known_face_names)} users registered | Last sync: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+            self.status.config(text=f"Automated System Ready | {len(self.attendance_system.known_face_names)} users registered | Last sync: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
             
             messagebox.showinfo("Success", f"User {name} removed successfully")
     
@@ -1005,7 +1052,6 @@ class AttendanceUI:
     def export_user_data(self, user_name):
         """Export user's attendance data to Excel"""
         try:
-            # Filter user's records
             user_records = [r for r in self.attendance_system.attendance_log 
                           if r["Name"] == user_name]
             
@@ -1013,15 +1059,12 @@ class AttendanceUI:
                 messagebox.showwarning("Warning", "No attendance records found")
                 return
             
-            # Create DataFrame
             df = pd.DataFrame(user_records)
             
-            # Get desktop path
             desktop = os.path.join(os.path.expanduser("~"), "Desktop")
             filename = f"{user_name}_attendance_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
             filepath = os.path.join(desktop, filename)
             
-            # Export to Excel
             df.to_excel(filepath, index=False)
             
             messagebox.showinfo(
