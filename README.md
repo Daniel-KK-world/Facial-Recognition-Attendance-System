@@ -104,10 +104,10 @@ Upon the final version can move to docker.
 
 👨🏽‍💻 Author
 Daniel Kwabi
-Computer Science Final Year Student
+
 📍 Ghana | 🧠 Deep Learning  Enthusiast
-🔗 LinkedIn | GitHub | YouTube (Super Dan)
+🔗 LinkedIn | GitHub | YouTube 
 
 
 📜 Acknowledgement
-Special thanks to Kantanka Financial Co-operative Society for trusting the vision of automated, intelligent attendance. This system was built as part of my final year university project.
+Special thanks to Kantanka Financial Co-operative Society for trusting the vision of automated, intelligent attendance.
