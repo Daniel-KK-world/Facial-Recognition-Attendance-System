@@ -31,7 +31,8 @@ class AttendanceUI:
         
         # Initialize systems
         self.attendance_system = AttendanceSystem()
-        self.face_processor = FaceProcessor(self.attendance_system)
+        # Disable automatic check-in/out when using button-driven workflow
+        self.face_processor = FaceProcessor(self.attendance_system, enable_auto_attendance=False)
         self.face_processor.start()
         
         # Performance tracking
@@ -314,6 +315,16 @@ class AttendanceUI:
             fg=self.dark_color
         )
         self.auto_status_label.pack(pady=10)
+
+        # Manual check-in / check-out buttons
+        btn_row = tk.Frame(status_frame, bg='white')
+        btn_row.pack(pady=(5, 10))
+
+        checkin_btn = self.create_modern_button(btn_row, "Check In", self.secondary_color, self.check_in_current_user)
+        checkin_btn.pack(side='left', padx=5)
+
+        checkout_btn = self.create_modern_button(btn_row, "Check Out", self.danger_color, self.check_out_current_user)
+        checkout_btn.pack(side='left', padx=5)
 
         # Instructions
         instructions_text = (
@@ -744,6 +755,32 @@ class AttendanceUI:
         if success:
             messagebox.showinfo("Success", f"Manual check-out for {name}")
             self.update_stats()
+        else:
+            messagebox.showwarning("Warning", message)
+
+    def check_in_current_user(self):
+        if not hasattr(self, 'current_user') or not self.current_user:
+            messagebox.showwarning("Warning", "No recognized user detected!")
+            return
+
+        success, message = self.attendance_system.record_attendance(self.current_user, "Check-in")
+        if success:
+            messagebox.showinfo("Success", f"Checked in {self.current_user}")
+            self.update_stats()
+            self.auto_status_label.config(text=f"✅ {self.current_user} - Checked In", fg=self.secondary_color)
+        else:
+            messagebox.showwarning("Warning", message)
+
+    def check_out_current_user(self):
+        if not hasattr(self, 'current_user') or not self.current_user:
+            messagebox.showwarning("Warning", "No recognized user detected!")
+            return
+
+        success, message = self.attendance_system.record_attendance(self.current_user, "Check-out")
+        if success:
+            messagebox.showinfo("Success", f"Checked out {self.current_user}")
+            self.update_stats()
+            self.auto_status_label.config(text=f"🚪 {self.current_user} - Checked Out", fg=self.danger_color)
         else:
             messagebox.showwarning("Warning", message)
     

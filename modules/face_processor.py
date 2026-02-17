@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 
 class FaceProcessor:
     """Optimized but reliable face processing with automated attendance"""
-    def __init__(self, attendance_system):
+    def __init__(self, attendance_system, enable_auto_attendance=True):
         self.attendance_system = attendance_system
         self.frame_queue = queue.Queue(maxsize=1)
         self.result_queue = queue.Queue(maxsize=1)
@@ -20,7 +20,8 @@ class FaceProcessor:
         self.detection_every_n_frames = 20
         self.frame_counter = 0
         
-        # NEW: Automated attendance tracking
+        # NEW: Automated attendance tracking (can be disabled)
+        self.enable_auto_attendance = enable_auto_attendance
         self.face_presence_tracker = {}  # {name: {"last_seen": timestamp, "status": "present/absent"}}
         self.auto_check_delay = 30  # seconds before auto check-out
         self.last_auto_check = datetime.now()
@@ -67,19 +68,21 @@ class FaceProcessor:
                         num_jitters=1
                     )
                 
-                # NEW: Automated attendance logic
+                # Prepare results using cached data
                 current_time = datetime.now()
                 current_faces = set()
-                
-                # Prepare results using cached data
                 results = []
                 for (loc, encoding) in zip(self.last_locations, self.last_encodings):
                     name, confidence = self.attendance_system.recognize_face(encoding)
                     
-                    # Only do liveness check on primary face
+                    # Only do liveness check on primary face (safe call)
                     is_live = None
-                    if loc == self.last_locations[0]:  # First face only
-                        is_live = self.attendance_system.detect_liveness(frame, loc)
+                    if self.last_locations and loc == self.last_locations[0]:  # First face only
+                        try:
+                            is_live = self.attendance_system.detect_liveness(frame, loc)
+                        except Exception as e:
+                            print(f"Liveness check error for {name}: {e}")
+                            is_live = False
                     
                     results.append({
                         "location": loc,
@@ -88,26 +91,29 @@ class FaceProcessor:
                         "is_live": is_live
                     })
                     
-                    # NEW: Track recognized faces for automated attendance
-                    if name != "Unknown" and confidence > 0.7:
-                        current_faces.add(name)
-                        
-                        # Auto check-in for new detections
-                        if name not in self.face_presence_tracker:
-                            status = self.attendance_system.get_attendance_status(name)
-                            if status == "absent":
-                                success, message = self.attendance_system.auto_check_in(name)
-                                if success:
-                                    print(f"✅ Auto check-in: {name}")
-                        
-                        # Update presence tracker
-                        self.face_presence_tracker[name] = {
-                            "last_seen": current_time,
-                            "status": "present"
-                        }
+                    # Track recognized faces for automated attendance only if enabled
+                    if self.enable_auto_attendance:
+                        if name != "Unknown" and confidence >= self.attendance_system.min_confidence:
+                            current_faces.add(name)
+                            
+                            # Auto check-in for new detections
+                            if name not in self.face_presence_tracker:
+                                status = self.attendance_system.get_attendance_status(name)
+                                if status == "absent":
+                                    success, message = self.attendance_system.auto_check_in(name)
+                                    print(f"Auto check-in attempt for {name} (conf={confidence:.2f}): {success} - {message}")
+                                    if success:
+                                        print(f"✅ Auto check-in: {name}")
+                            
+                            # Update presence tracker
+                            self.face_presence_tracker[name] = {
+                                "last_seen": current_time,
+                                "status": "present"
+                            }
                 
-                # NEW: Check for departed faces (auto check-out)
-                self._check_departures(current_faces, current_time)
+                # Check for departed faces (auto check-out) only if enabled
+                if self.enable_auto_attendance:
+                    self._check_departures(current_faces, current_time)
                 
                 # Update results
                 if not self.result_queue.empty():
@@ -138,6 +144,7 @@ class FaceProcessor:
                 # Only check out if they're currently checked in
                 if status == "checked_in":
                     success, message = self.attendance_system.auto_check_out(name)
+                    print(f"Auto check-out attempt for {name}: {success} - {message}")
                     if success:
                         print(f"🚪 Auto check-out: {name} (absent for {time_absent:.0f}s)")
                     else:

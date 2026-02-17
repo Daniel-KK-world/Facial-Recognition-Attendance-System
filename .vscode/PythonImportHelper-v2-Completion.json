@@ -62,6 +62,30 @@
         "documentation": {}
     },
     {
+        "label": "timedelta",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "timedelta",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
         "label": "datetime",
         "importPath": "datetime",
         "description": "datetime",
@@ -107,42 +131,18 @@
     },
     {
         "label": "FaceProcessor",
-        "importPath": "modules",
-        "description": "modules",
+        "importPath": "modules.face_processor",
+        "description": "modules.face_processor",
         "isExtraImport": true,
-        "detail": "modules",
+        "detail": "modules.face_processor",
         "documentation": {}
     },
     {
         "label": "AttendanceSystem",
-        "importPath": "modules",
-        "description": "modules",
+        "importPath": "modules.attendance_system",
+        "description": "modules.attendance_system",
         "isExtraImport": true,
-        "detail": "modules",
-        "documentation": {}
-    },
-    {
-        "label": "FaceProcessor",
-        "importPath": "modules",
-        "description": "modules",
-        "isExtraImport": true,
-        "detail": "modules",
-        "documentation": {}
-    },
-    {
-        "label": "AttendanceSystem",
-        "importPath": "modules",
-        "description": "modules",
-        "isExtraImport": true,
-        "detail": "modules",
-        "documentation": {}
-    },
-    {
-        "label": "AttendanceUI",
-        "importPath": "modules",
-        "description": "modules",
-        "isExtraImport": true,
-        "detail": "modules",
+        "detail": "modules.attendance_system",
         "documentation": {}
     },
     {
@@ -221,20 +221,27 @@
         "documentation": {}
     },
     {
-        "label": "ctypes",
-        "kind": 6,
+        "label": "FaceProcessor",
+        "importPath": "modules",
+        "description": "modules",
         "isExtraImport": true,
-        "importPath": "ctypes",
-        "description": "ctypes",
-        "detail": "ctypes",
+        "detail": "modules",
         "documentation": {}
     },
     {
-        "label": "FaceProcessor",
-        "importPath": "modules.face_processor",
-        "description": "modules.face_processor",
+        "label": "AttendanceSystem",
+        "importPath": "modules",
+        "description": "modules",
         "isExtraImport": true,
-        "detail": "modules.face_processor",
+        "detail": "modules",
+        "documentation": {}
+    },
+    {
+        "label": "AttendanceUI",
+        "importPath": "modules",
+        "description": "modules",
+        "isExtraImport": true,
+        "detail": "modules",
         "documentation": {}
     },
     {
@@ -242,7 +249,7 @@
         "kind": 6,
         "importPath": "modules.attendance_system",
         "description": "modules.attendance_system",
-        "peekOfCode": "class AttendanceSystem:\n    def __init__(self):\n        self.known_face_encodings = []\n        self.known_face_names = []\n        self.attendance_log = []\n        self.anti_spoofing_threshold = 0.3  # Threshold to indicate that a user is real. \n        self.min_confidence = 0.6  # Minimum confidence for recognition\n        self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=2)\n        self.liveness_cache = {}  # {name: timestamp}\n        self.liveness_timeout = 10000  # seconds between liveness checks per person",
+        "peekOfCode": "class AttendanceSystem:\n    def __init__(self):\n        self.known_face_encodings = []\n        self.known_face_names = []\n        self.attendance_log = []\n        self.anti_spoofing_threshold = 0.3\n        self.min_confidence = 0.6\n        self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=2)\n        self.liveness_cache = {}\n        self.liveness_timeout = 10000",
         "detail": "modules.attendance_system",
         "documentation": {}
     },
@@ -251,7 +258,7 @@
         "kind": 6,
         "importPath": "modules.face_processor",
         "description": "modules.face_processor",
-        "peekOfCode": "class FaceProcessor:\n    \"\"\"Optimized but reliable face processing\"\"\"\n    def __init__(self, attendance_system):\n        self.attendance_system = attendance_system\n        self.frame_queue = queue.Queue(maxsize=1)\n        self.result_queue = queue.Queue(maxsize=1)\n        self.running = False\n        self.process_thread = None\n        self.last_locations = []\n        self.last_encodings = []",
+        "peekOfCode": "class FaceProcessor:\n    \"\"\"Optimized but reliable face processing with automated attendance\"\"\"\n    def __init__(self, attendance_system, enable_auto_attendance=True):\n        self.attendance_system = attendance_system\n        self.frame_queue = queue.Queue(maxsize=1)\n        self.result_queue = queue.Queue(maxsize=1)\n        self.running = False\n        self.process_thread = None\n        self.last_locations = []\n        self.last_encodings = []",
         "detail": "modules.face_processor",
         "documentation": {}
     },
@@ -260,7 +267,7 @@
         "kind": 6,
         "importPath": "modules.ui",
         "description": "modules.ui",
-        "peekOfCode": "class AttendanceUI:\n    def __init__(self):\n        self.root = tk.Tk()\n        self.root.geometry(\"1280x800+100+50\")\n        self.root.title(\"KFCS Attendance Pro\")\n        self.root.configure(bg='#f5f7fa')\n        self.root.tk.call('wm', 'iconphoto', self.root._w, tk.PhotoImage(width=1, height=1))\n        self.root.protocol(\"WM_DELETE_WINDOW\", self.on_close)\n        # Custom color scheme\n        self.primary_color = \"#4e73df\"",
+        "peekOfCode": "class AttendanceUI:\n    def __init__(self):\n        self.root = tk.Tk()\n        self.root.geometry(\"1280x800+100+50\")\n        self.root.title(\"KFCS Attendance Pro - Automated\")\n        self.root.configure(bg='#f5f7fa')\n        self.root.tk.call('wm', 'iconphoto', self.root._w, tk.PhotoImage(width=1, height=1))\n        self.root.protocol(\"WM_DELETE_WINDOW\", self.on_close)\n        # Custom color scheme\n        self.primary_color = \"#4e73df\"",
         "detail": "modules.ui",
         "documentation": {}
     },
