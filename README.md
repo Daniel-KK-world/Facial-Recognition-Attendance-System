@@ -92,9 +92,6 @@ Upon the final version can move to docker.
 
 
 ## 📊 Future Improvements
-### Add support for multiple camera inputs
-
-### Integrate web-based admin dashboard
 
 ### Real-time cloud synchronization
 
