@@ -1,4 +1,4 @@
-# 📸 Real-Time Facial Recognition Attendance System
+# 📸 Real-Time Facial Recognition EMS
 ## V2 UI Revamp 
 <img width="1081" height="584" alt="image" src="https://github.com/user-attachments/assets/075af8d5-86d8-4e15-9c5f-3ec2179316fc" />
 
