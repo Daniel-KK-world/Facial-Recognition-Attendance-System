@@ -62,7 +62,7 @@
         "documentation": {}
     },
     {
-        "label": "timedelta",
+        "label": "datetime",
         "importPath": "datetime",
         "description": "datetime",
         "isExtraImport": true,
@@ -91,6 +91,30 @@
         "description": "datetime",
         "isExtraImport": true,
         "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "add_attendance_record",
+        "importPath": "modules.database",
+        "description": "modules.database",
+        "isExtraImport": true,
+        "detail": "modules.database",
+        "documentation": {}
+    },
+    {
+        "label": "get_all_records",
+        "importPath": "modules.database",
+        "description": "modules.database",
+        "isExtraImport": true,
+        "detail": "modules.database",
+        "documentation": {}
+    },
+    {
+        "label": "get_today_records",
+        "importPath": "modules.database",
+        "description": "modules.database",
+        "isExtraImport": true,
+        "detail": "modules.database",
         "documentation": {}
     },
     {
@@ -100,6 +124,23 @@
         "importPath": "csv",
         "description": "csv",
         "detail": "csv",
+        "documentation": {}
+    },
+    {
+        "label": "sqlite3",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "sqlite3",
+        "description": "sqlite3",
+        "detail": "sqlite3",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
         "documentation": {}
     },
     {
@@ -251,6 +292,51 @@
         "description": "modules.attendance_system",
         "peekOfCode": "class AttendanceSystem:\n    def __init__(self):\n        self.known_face_encodings = []\n        self.known_face_names = []\n        self.attendance_log = []\n        self.anti_spoofing_threshold = 0.3\n        self.min_confidence = 0.6\n        self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=2)\n        self.liveness_cache = {}\n        self.liveness_timeout = 10000",
         "detail": "modules.attendance_system",
+        "documentation": {}
+    },
+    {
+        "label": "init_database",
+        "kind": 2,
+        "importPath": "modules.database",
+        "description": "modules.database",
+        "peekOfCode": "def init_database():\n    \"\"\"Create the database and table if they don't exist\"\"\"\n    conn = sqlite3.connect(str(DB_PATH))\n    cursor = conn.cursor()\n    # Create table (like a spreadsheet with columns)\n    cursor.execute(\"\"\"\n    CREATE TABLE IF NOT EXISTS attendance (\n        id INTEGER PRIMARY KEY AUTOINCREMENT,\n        name TEXT NOT NULL,\n        date TEXT NOT NULL,",
+        "detail": "modules.database",
+        "documentation": {}
+    },
+    {
+        "label": "add_attendance_record",
+        "kind": 2,
+        "importPath": "modules.database",
+        "description": "modules.database",
+        "peekOfCode": "def add_attendance_record(name, date, check_in=None, check_out=None):\n    \"\"\"Add or update an attendance record\"\"\"\n    conn = sqlite3.connect(str(DB_PATH))\n    cursor = conn.cursor()\n    # Check if record exists\n    cursor.execute(\"SELECT id FROM attendance WHERE name = ? AND date = ?\", (name, date))\n    existing = cursor.fetchone()\n    if existing:\n        # Update existing record\n        cursor.execute(\"\"\"",
+        "detail": "modules.database",
+        "documentation": {}
+    },
+    {
+        "label": "get_all_records",
+        "kind": 2,
+        "importPath": "modules.database",
+        "description": "modules.database",
+        "peekOfCode": "def get_all_records():\n    \"\"\"Get all attendance records (like reading the entire CSV)\"\"\"\n    conn = sqlite3.connect(str(DB_PATH))\n    cursor = conn.cursor()\n    cursor.execute(\"SELECT name, date, check_in, check_out FROM attendance ORDER BY date DESC\")\n    rows = cursor.fetchall()\n    conn.close()\n    # Convert to dictionary format (same as your CSV)\n    records = []\n    for row in rows:",
+        "detail": "modules.database",
+        "documentation": {}
+    },
+    {
+        "label": "get_today_records",
+        "kind": 2,
+        "importPath": "modules.database",
+        "description": "modules.database",
+        "peekOfCode": "def get_today_records(date):\n    \"\"\"Get all records for a specific date\"\"\"\n    conn = sqlite3.connect(str(DB_PATH))\n    cursor = conn.cursor()\n    cursor.execute(\"SELECT name, date, check_in, check_out FROM attendance WHERE date = ?\", (date,))\n    rows = cursor.fetchall()\n    conn.close()\n    records = []\n    for row in rows:\n        records.append({",
+        "detail": "modules.database",
+        "documentation": {}
+    },
+    {
+        "label": "DB_PATH",
+        "kind": 5,
+        "importPath": "modules.database",
+        "description": "modules.database",
+        "peekOfCode": "DB_PATH = Path(__file__).resolve().parents[1] / \"attendance.db\"\ndef init_database():\n    \"\"\"Create the database and table if they don't exist\"\"\"\n    conn = sqlite3.connect(str(DB_PATH))\n    cursor = conn.cursor()\n    # Create table (like a spreadsheet with columns)\n    cursor.execute(\"\"\"\n    CREATE TABLE IF NOT EXISTS attendance (\n        id INTEGER PRIMARY KEY AUTOINCREMENT,\n        name TEXT NOT NULL,",
+        "detail": "modules.database",
         "documentation": {}
     },
     {

@@ -4,7 +4,8 @@ import os
 import numpy as np
 import concurrent.futures
 import hashlib 
-from datetime import datetime, timedelta
+from datetime import datetime
+from modules.database import add_attendance_record, get_all_records, get_today_records 
 import csv 
 
 class AttendanceSystem:
@@ -34,22 +35,18 @@ class AttendanceSystem:
 
     def load_data(self):
         try:
+            # Load face encodings (keep this the same)
             if os.path.exists("data/facial_recognition.dat"):
                 with open("data/facial_recognition.dat", "rb") as f:
                     data = pickle.load(f)
                     self.known_face_encodings = data["encodings"]
                     self.known_face_names = data["names"]
             
-            if os.path.exists("data/attendance.csv"):
-                with open("data/attendance.csv", "r") as f:
-                    reader = csv.DictReader(f)
-                    self.attendance_log = list(reader)
+            # CHANGED: Load from database instead of CSV
+            self.attendance_log = get_all_records()
                     
             if not os.path.exists("data/facial_recognition.dat"):
                 self.save_known_faces()
-            if not os.path.exists("data/attendance.csv"):
-                with open("data/attendance.csv", "w") as f:
-                    f.write("Name,Date,Check-in,Check-out\n")
                     
         except Exception as e:
             print(f"Error loading data: {e}")
@@ -61,7 +58,7 @@ class AttendanceSystem:
     def save_data(self):
         try:
             self.save_known_faces()
-            self.save_attendance_data()
+            # No need to save attendance anymore — it's auto-saved to DB
         except Exception as e:
             print(f"Error saving data: {e}")
 
@@ -75,17 +72,6 @@ class AttendanceSystem:
                 pickle.dump(data, f)
         except Exception as e:
             print(f"Error saving face data: {e}")
-
-    def save_attendance_data(self):
-        try:
-            if self.attendance_log:
-                keys = self.attendance_log[0].keys()
-                with open("data/attendance.csv", "w", newline='') as f:
-                    writer = csv.DictWriter(f, fieldnames=keys)
-                    writer.writeheader()
-                    writer.writerows(self.attendance_log)
-        except Exception as e:
-            print(f"Error saving attendance data: {e}")
 
     def register_new_user(self, name, face_encodings):
         if not name or not face_encodings:
@@ -130,6 +116,7 @@ class AttendanceSystem:
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         date = datetime.now().strftime("%Y-%m-%d")
         
+        # Look in current log
         existing_entry = None
         for record in self.attendance_log:
             if record["Name"] == name and record["Date"] == date:
@@ -140,18 +127,20 @@ class AttendanceSystem:
             if existing_entry and existing_entry["Check-in"] != "":
                 return False, "Already checked in today"
             
+            # CHANGED: Save to database
+            add_attendance_record(name, date, check_in=timestamp)
+            
+            # Update in-memory log
             if not existing_entry:
-                new_record = {
+                self.attendance_log.append({
                     "Name": name,
                     "Date": date,
                     "Check-in": timestamp,
                     "Check-out": ""
-                }
-                self.attendance_log.append(new_record)
+                })
             else:
                 existing_entry["Check-in"] = timestamp
                 
-            self.save_attendance_data()
             return True, "Checked in successfully"
             
         elif action == "Check-out":
@@ -160,8 +149,12 @@ class AttendanceSystem:
             if existing_entry["Check-out"] != "":
                 return False, "Already checked out today"
             
+            # CHANGED: Save to database
+            add_attendance_record(name, date, check_out=timestamp)
+            
+            # Update in-memory log
             existing_entry["Check-out"] = timestamp
-            self.save_attendance_data()
+            
             return True, "Checked out successfully"
         
         return False, "Invalid action"
